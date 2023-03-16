@@ -1,0 +1,124 @@
+---
+title: "Class 5: Data Visualization"
+author: "Tomi Lane Timmins"
+format: pdf
+---
+
+# Plotting in R
+
+R has multiple plotting and graphics systems. The most popular of which is **ggplot2**.
+
+We have already played with "base" R graphics. This comes along with R "out of the box".
+
+```{r}
+plot(cars)
+```
+
+Compared to base R plots, ggplot is much more verbose - I need to write more code to get simple plots like the one above.
+
+To use ggplot, I need to first install the ggplot2 package. To install a package in R I use the 'install.packages()' command along with the package name. (This was already completed beforehand)
+
+The install above is a one time only requirement. The package is now on my computer - no need to re-install it. However, I can't just use it without loading it up with a 'library()' call.
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+ggplot(cars)
+```
+
+all ggplot figures need at least 3 things:
+
+-   data (this is the data.frame with our numbers, characters, etc) + aesthetics ("aes", how our data maps to the plot - what is on x axis, y axis, what color, etc) + geoms (do you want lines, points, columns, etc?)
+
+```{r}
+ggplot(data = cars) + aes(x = speed, y = dist)
+```
+
+With only data + aesthetic, you have the start of the plot, but R doesn't know how you want it (point, line, etc)
+
+```{r}
+bb <- ggplot(data = cars) + aes(x=speed, y=dist) + geom_point()
+
+bb
+```
+
+We want to see a line to show a clear relationship between speed and distance.
+
+```{r}
+bb + geom_line()
+```
+
+This is not what we want.
+
+```{r}
+bb + geom_smooth()
+```
+
+Remove the standard error from the plot.
+
+```{r}
+bb + geom_smooth(method = "lm", se = FALSE)
+```
+
+Give the plot labels and make it look more conservative.
+
+```{r}
+bb + geom_smooth(method = "lm", se = FALSE) + labs(title = "The Speed and the Stopping Distance of Cars", x = "Speed (mph)", y = "Stopping Distance (ft)") + theme_bw()
+```
+
+
+
+
+Moving on to another dataset to show gene expression. Make sure to include 'head(genes)' - otherwise will have 5000 genes on the report. The 'head()' function will print out just the first few rows, (6 by default)
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes, 10)
+```
+
+The nrow() function shows how many rows are in the dataset and therefore how many genes are in the dataset.
+
+```{r}
+nrow(genes)
+```
+
+The colnames() function tells us the names of the columns in the 'genes' dataset. The ncol() gives the number of columns.
+
+```{r}
+colnames(genes)
+```
+
+```{r}
+ncol(genes)
+```
+
+The table() function specifically with the State column tells us the number of genes in each state.
+
+```{r}
+table(genes$State)
+```
+
+Plot the gene dataset.
+
+```{r}
+
+ggplot(genes) + aes(x = Condition1, y = Condition2) + geom_point()
+
+```
+
+Plot to include the data about the State of the genes (up/down/unchanging). The 'color = State' automatically colors the data from the State vector onto the plot.
+
+```{r}
+p <- ggplot(data = genes) + aes(x = Condition1, y = Condition2, color = State) + geom_point() + labs(title = "Gene Expression Changes upon Drug Treatment", subtitle = "The up/down regulation of varying genes under Condition1 and Condition2", x = "Control (no drug)", y = "Drug Treatment")
+
+p
+```
+
+We want to change the colors of the plot. 
+```{r}
+p + scale_colour_manual(values = c("blue", "gray", "red"))
+```
+
