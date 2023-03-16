@@ -1,0 +1,45 @@
+---
+title: "Function HW Q6"
+author: "Tomi Lane Timmins"
+format: pdf
+---
+
+```{r}
+library("bio3d")
+```
+
+Function: 
+
+```{r}
+plot_bfactor <- function(x) { 
+  #download the pdb file and trim it down to a subset: only Calpha atoms on Chain A
+ s1 <- trim.pdb(    read.pdb(x), chain="A", elety="CA" ) 
+
+ #plot the subset against the bfactor
+  plotb3(s1$atom$b, 
+    sse=s1, typ="l", ylab = "bfactor")
+}
+```
+
+The function input is a pdb file and the function output is a plot against the bfactor.
+
+The function takes the given file, trims it down to a subset and plots the bfactor against the residues to view the atom mobility of different areas of the protein for use in analysis.
+
+One only has to input the pdb file.
+
+For example:
+```{r}
+plot_bfactor("4AKE")
+```
+
+
+```{r}
+plot_bfactor("1AKE")
+```
+
+
+```{r}
+plot_bfactor("1E4Y")
+```
+
+

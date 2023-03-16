@@ -1,0 +1,183 @@
+---
+title: "Class06 HW: Writing Functions"
+author: Tomi Lane Timmins
+format: html
+---
+
+First, one must call up the package. we want to use.
+
+```{r}
+library("bio3d")
+```
+
+Q1. What type of object is returned from the read.pdb() function?
+
+```{r}
+s1 <- read.pdb("4AKE") # kinase with drug
+s1
+```
+
+As we can see, the s1, s2 and s3 code each access pdb files from "bio3d" for different protein sequences. 
+
+```{r}
+s2 <- read.pdb("1AKE") # kinase no drug
+s3 <- read.pdb("1E4Y") # kinase with drug
+```
+
+```{r}
+attributes(s1)
+```
+
+
+Q2. What does the trim.pdb() function do?
+
+```{r}
+s1.chainA <- trim.pdb(s1, chain="A", elety="CA")
+
+s1.chainA
+```
+
+After running the code and looking at the help page, the trim.pdb function trims a pdb object to a subset. 
+
+First Argument: pdb
+(the file download, in this case s1)
+
+Second Argument: "chain" 
+(specifies the subset to keep, in this case chain A instead of B)
+
+Third Argument: "elety"
+(specifies atom type -in this case CA = calpha which are protein atoms)
+
+
+Repeat with s2 and s3:
+
+```{r}
+s2.chainA <- trim.pdb(s2, chain="A", elety="CA")
+s3.chainA <- trim.pdb(s3, chain="A", elety="CA")
+```
+
+
+```{r}
+s1.b <- s1.chainA$atom$b
+s1.b
+```
+
+The 'atom' attribute is a data frame with atom coordinate data and 'atom$b' specifies the atom mobility (bfactor).
+
+```{r}
+s2.b <- s2.chainA$atom$b
+s3.b <- s3.chainA$atom$b
+```
+
+
+```{r}
+plotb3(s1.b, sse=s1.chainA, typ="l", ylab="Bfactor")
+```
+
+```{r}
+plotb3(s2.b, sse=s2.chainA, typ="l", ylab="Bfactor") 
+```
+
+```{r}
+plotb3(s3.b, sse=s3.chainA, typ="l", ylab="Bfactor")
+```
+
+
+Q3. What input parameter would turn off the marginal black and grey rectangles in the plots and what do they represent in this case?
+
+The 'plotb3()' function creates a scatterplot with "secondary structure in marginal regions" (so it places the rectangles in the top and bottom). 
+
+- The first argument specifies the object to be plotted (in this case s1.b )
+
+- The second argument is sse, which specifies secondary structure elements (dark grey is alpha helices and light grey is beta sheets)
+
+- The third argument is type, which specifies the type of plot ('l' denotes line)
+
+- The fourth argument is ylab, which labels the y axis
+
+To turn off the rectangles (which represent secondary structures of the proteins), we should only need to modify the sse:
+
+```{r}
+plotb3(s1.b, typ="l", ylab="Bfactor") 
+```
+
+It worked, so let's repeat with the other two objects.
+
+```{r}
+plotb3(s2.b, typ="l", ylab="Bfactor")
+```
+
+```{r}
+plotb3(s3.b, typ="l", ylab="Bfactor")
+```
+
+Q4. What would be a better plot to compare across the different proteins?
+
+An RMSD dendogram would better compare the three protein structures.
+
+
+Q5. Which proteins are more similar to each other in their B-factor trends. How could
+you quantify this?
+HINT: try the rbind(), dist() and hclust() functions together with a
+resulting dendrogram plot. Look up the documentation to see what each of these
+functions does.
+
+
+'rbind()': combines R objects by rows
+
+'dist()': calculates the distance between rows of a data matrix
+
+'hclust()': groups objects by clusters to compare them
+
+```{r}
+hc <- hclust(dist(rbind(s1.b, s2.b, s3.b)))
+plot(hc)
+```
+
+The s2.b and s3.b proteins are most similar to one another ( the kinase with a drug and kinase without a drug)
+
+Q6. How would you generalize the original code above to work with any set of input
+protein structures?
+
+Write your own function starting from the code above that analyzes protein drug
+interactions by reading in any protein PDB data and outputs a plot for the specified
+protein.
+
+
+Here is each step of the original code:
+```{r}
+s1 <- read.pdb("4AKE") # kinase with drug
+
+s1.chainA <- trim.pdb(s1, chain="A", elety="CA")
+
+s1.b <- s1.chainA$atom$b
+
+plotb3(s1.b, sse=s1.chainA, typ="l", ylab="Bfactor") 
+
+```
+
+Here is the original code nested within each other:
+```{r}
+plotb3(trim.pdb(read.pdb("4AKE"), chain="A", elety="CA")$atom$b, sse=s1.chainA, typ="l", ylab="Bfactor") 
+```
+
+This is a nesting of the modified code to compare the three protein sequences: (my original mistake when starting to create the function)
+```{r}
+plot(hclust(  dist(
+    rbind(
+      trim.pdb(read.pdb("4AKE"), chain="A", elety="CA")$atom$b, trim.pdb(read.pdb("1AKE") , chain="A", elety="CA")$atom$b, trim.pdb(read.pdb("1E4Y") , chain="A", elety="CA")$atom$b) ) )) 
+```
+
+
+
+
+```{r}
+plot_bfactor <- function(x) { plotb3( trim.pdb(      read.pdb(x), chain="A", elety="CA" )$atom$b, sse=s1.chainA, typ="l", ylab="Bfactor") 
+         }
+```
+
+The only function input is the pdb file.
+
+The output of the function is a plot. 
+
+The function takes the given file and plots the bfactor against the residues to view the atom mobility of different areas of hte protein.
