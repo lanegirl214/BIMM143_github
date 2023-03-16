@@ -1,0 +1,291 @@
+---
+title: "Class 09"
+author: "Tomi Lane Timmins"
+format: gfm
+---
+
+# 1. Introduction to the RCSB Protein Data Bank
+
+```{r}
+pdbStats <- read.csv("DataExportSummary.csv")
+pdbStats
+```
+
+> Q1: What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy.
+
+```{r}
+pdbStats$X.ray
+```
+These values are returned with quotations and must be coded as characters. This means 'sum(pdbStats[,1])' will not work because. We must change the values from characters to numerals before any analysis can be done. The function 'as.numeric()' can make the column readable as numeric values rather than characters.
+
+```{r}
+as.numeric(pdbStats$X.ray)
+```
+'as.numeric()' cannot process the commas that are included in the larger values (ex. the amount of  'protein-only' imaged by method of X ray is '152,809') We need to remove these commas to work with the data. 
+
+We can use 'gsub()' to remove the commas. The 'gsub()' function requires "pattern", "replacement" and "x". x is our data.frame,  the pattern we would like to remove is the commas. and the replacement is nothing. 
+
+```{r}
+gsub(",","", pdbStats$X.ray)
+```
+
+After removing the commas and changing the values to numeric, we can sum values of each column and figure out what proportion of structures were solved by EM and X ray diffraction. 
+```{r}
+n.xray <- (sum(as.numeric(gsub(",","", pdbStats$X.ray))))
+n.xray
+
+n.em <- (sum(as.numeric(gsub(",","", pdbStats$EM))))
+n.em
+
+n.total <- (sum(as.numeric(gsub(",","", pdbStats$Total))))
+n.total
+```
+
+```{r}
+p.em <- (n.em/ n.total) *100
+p.em
+p.xray <- (n.xray/n.total) *100
+p.xray
+```
+
+7% of the structures were solved by EM and 85.9% of the structures were solved by X-Ray diffraction. Together, 92.9% of the structures were solved by these two methods.
+
+> Q2: What proportion of structures in the PDB are protein?
+
+Similarly, we need to remove the commas and change the values from characters. If we were going to be doing a longer analysis, we would write a function to make the code more readable.
+```{r}
+n.protein <- (sum(as.numeric(gsub(",","", pdbStats[1,8]))))
+
+(n.protein/n.total)*100
+```
+
+ Approximately 86.9% of the structures are proteins.
+
+> Q3: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+
+4,791 structures are in the current PDB
+
+# Visualizing the HIV-1 Protease Structure
+
+
+Here is the 3D image of HIV-1:
+
+![](1HSG (8).png)
+
+Here are 3D images of Asp-25 on each subunit of HIV-1:
+
+spacefill representation: 
+
+![](1HSG.png)
+
+ball and stick representation:
+
+![](1HSG copy.png)
+
+> Q4: Water molecules normally have 3 atoms. Why do we see just one atom per water molecule in this structure?
+
+HIV-1 is overall positively charged and so any interactions between the polymer and water is through oxygen(which has a partial negative charge), so they only show one atom per water molecule for simplicity's sake. 
+
+> Q5: There is a critical “conserved” water molecule in the binding site. Can you identify this water molecule? What residue number does this water molecule have
+
+HOH 308 
+
+> Q6: Generate and save a figure clearly showing the two distinct chains of HIV-protease along with the ligand. You might also consider showing the catalytic residues ASP 25 in each chain and the critical water (we recommend “Ball & Stick” for these side-chains). Add this figure to your Quarto document.
+
+![](FinalHSG.png)
+
+Call up bio3d and access online PDB file:
+
+```{r}
+library(bio3d)
+
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+pdb
+```
+
+
+> Q7: How many amino acid residues are there in this pdb object?
+
+198
+
+>Q8: Name one of the two non-protein residues?
+
+HOH (or MK1)
+
+> Q9: How many protein chains are in this structure?
+
+2
+
+Learn about the attributes of this object:
+```{r}
+attributes(pdb)
+```
+
+Access the 'atom' attribute:
+```{r}
+head(pdb$atom)
+```
+
+#Predicting functional motions of a single structure
+
+Access new online pdb file:
+```{r}
+adk <- read.pdb("6s36")
+```
+
+```{r}
+adk
+```
+
+'nma()' stands for "normal mode analysis" and predicts protein flexibility and potential conformational changes
+```{r}
+m <- nma(adk)
+```
+
+```{r}
+plot(m)
+```
+
+
+Now we will view the predicted motions and conformational changes of the protein using 'mktrj()'. It shows the predicted trajectories and therefore enables us to watch a "movie" of the predicted motions.
+```{r}
+mktrj(m, file = "adk_m7.pdb")
+```
+
+This file can be uploaded into mol to view the movement of the protein.
+
+
+# Section 4. Comparative Structure Analysis 
+
+Today we are continuing where we left off last day, building towards completing the loop from biomolecular structural data to our new analysis methods like PCA and clustering. 
+
+> Q10. Which of the packages above is found only on BioConductor and not CRAN?
+
+msa package
+
+> Which of the above packages is not found on BioConductor or CRAN?
+
+bio3d-view
+
+> Q12. True or False? Functions from the devtools package can be used to install packages from GitHub and BitBucket?
+
+TRUE
+
+```{r}
+library(bio3d)
+
+aa <- get.seq("1ake_A")
+```
+```{r}
+aa
+```
+
+> Q13. How many amino acids are in this sequence, i.e. how long is this sequence?
+
+214 amino acids
+
+Now we can use this sequence as a query to BLAST search. the PDB to find similar sequences and structures
+```{r}
+#blast search
+#b <- blast.pdb(aa)
+```
+I could save and load my blast results next time so I don't need to run the search every time and this work stays reproducible.
+
+```{r}
+#saveRDS(b, file = "blast_results.RDS")
+```
+
+```{r}
+b <- readRDS("blast_results.RDS")
+```
+
+A summary plot of search results:
+```{r}
+hits <- plot(b)
+```
+
+List out some 'top hits':
+```{r}
+hits$pdb.id
+```
+
+
+```{r}
+#downlaod related PDB files
+files <- get.pdb(hits$pdb.id, path="pdbs", split = TRUE, gzip=TRUE)
+```
+
+
+Next we are going to align and superpose all these structures:
+
+```{r}
+#align related PDBs
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa")
+
+pdbs
+```
+
+
+```{r}
+pdbs$xyz
+```
+
+```{r}
+#vector containing. PDB codes for figure axis
+ids <- basename.pdb(pdbs$id)
+
+#draw schematic alignment
+#plot(pdbs, labels=ids)
+
+#R Error Avoided: figure margins too large to render in pdf. Still reproducible in code.
+
+```
+
+```{r}
+anno <- pdb.annotate(ids)
+unique(anno$source)
+```
+
+```{r}
+head(anno)
+```
+
+
+#Principal Component Analysis
+
+Time for PCA. We will not use the 'prcomp()' function from base R but the 'pca()' function from the 'bio3d' package as this one is designed to work nicely with biomolecular data.
+
+```{r}
+pc.xray <- pca(pdbs)
+
+plot(pc.xray)
+```
+
+
+
+```{r}
+#calculate RMSD
+rd <- rmsd(pdbs)
+
+#strucutre based clustering
+hc.rd <- hclust(dist(rd))
+grps.rd <- cutree(hc.rd, k=3)
+
+plot(pc.xray, 1:2, col="grey50", bg=grps.rd, pch=21,cex=1)
+```
+
+# Further Visualization
+
+To visualize the major structural variations in the ensemble the function mktrj() can be used to generate a trajectory PDB file by interpolating along a give PC (eigenvector):
+
+```{r}
+#visualize first principal component
+pc1 <- mktrj(pc.xray, pc=1, file ="pc_1.pdb")
+```
+
+We can now open this trajectory file in Molstar ("pc_1.pdb") to view a movie of the major differences (i.e. displacements) in the structure set as we move along PC1.
+
+

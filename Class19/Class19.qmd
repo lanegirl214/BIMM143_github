@@ -1,0 +1,428 @@
+---
+title: "Class 19"
+author: "Tomi Lane Timmins"
+format: pdf
+---
+
+```{r}
+cdc <- data.frame(
+                          Year = c(1922L,
+                                   1923L,1924L,1925L,1926L,1927L,1928L,
+                                   1929L,1930L,1931L,1932L,1933L,1934L,1935L,
+                                   1936L,1937L,1938L,1939L,1940L,1941L,
+                                   1942L,1943L,1944L,1945L,1946L,1947L,1948L,
+                                   1949L,1950L,1951L,1952L,1953L,1954L,
+                                   1955L,1956L,1957L,1958L,1959L,1960L,
+                                   1961L,1962L,1963L,1964L,1965L,1966L,1967L,
+                                   1968L,1969L,1970L,1971L,1972L,1973L,
+                                   1974L,1975L,1976L,1977L,1978L,1979L,1980L,
+                                   1981L,1982L,1983L,1984L,1985L,1986L,
+                                   1987L,1988L,1989L,1990L,1991L,1992L,1993L,
+                                   1994L,1995L,1996L,1997L,1998L,1999L,
+                                   2000L,2001L,2002L,2003L,2004L,2005L,
+                                   2006L,2007L,2008L,2009L,2010L,2011L,2012L,
+                                   2013L,2014L,2015L,2016L,2017L,2018L,
+                                   2019L),
+  Cases = c(107473,
+                                   164191,165418,152003,202210,181411,
+                                   161799,197371,166914,172559,215343,179135,
+                                   265269,180518,147237,214652,227319,103188,
+                                   183866,222202,191383,191890,109873,
+                                   133792,109860,156517,74715,69479,120718,
+                                   68687,45030,37129,60886,62786,31732,28295,
+                                   32148,40005,14809,11468,17749,17135,
+                                   13005,6799,7717,9718,4810,3285,4249,
+                                   3036,3287,1759,2402,1738,1010,2177,2063,
+                                   1623,1730,1248,1895,2463,2276,3589,
+                                   4195,2823,3450,4157,4570,2719,4083,6586,
+                                   4617,5137,7796,6564,7405,7298,7867,
+                                   7580,9771,11647,25827,25616,15632,10454,
+                                   13278,16858,27550,18719,48277,28639,
+                                   32971,20762,17972,18975,15609,18617)
+)
+```
+
+
+```{r}
+head(cdc)
+```
+
+
+# 1 Investigating pertussis cases by year
+
+
+> Q1. With the help of the R “addin” package datapasta assign the CDC pertussis case number data to a data frame called cdc and use ggplot to make a plot of cases numbers over time.
+
+
+
+```{r}
+library(ggplot2)
+
+baseplot <- ggplot(cdc) + 
+  aes(Year, Cases) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Pertussis Cases by Year (1922-2019)", x = "Year", y = "Number of Cases")
+
+baseplot
+```
+
+> Q2. Using the ggplot geom_vline() function add lines to your previous plot for the 1946 introduction of the wP vaccine and the 1996 switch to aP vaccine (see example in the hint below). What do you notice?
+
+```{r}
+baseplot + geom_vline(xintercept = 1946, col = "blue") +
+  geom_vline(xintercept = 1996, col = "red")
+```
+
+> Q3. Describe what happened after the introduction of the aP vaccine? Do you have a possible explanation for the observed trend?
+
+The number of observed cases increased after the introduction of the new vaccine. It could be due to bacterial resistance, decreased effectiveness, or less people obtaining vaccines. 
+
+
+Additional points for discussion: How are vaccines currently approved?
+
+Typically we examine ‘Correlates of protection’ and need to conclude a study in finite time. For the aP vaccine there is an induction of pertussis toxin (PT) antibody titers in infants at equivalent levels to those induced by the wP vaccine. The aP vaccines also had less side effects (reduction of sore arms, fever and pain).
+
+It is impossible to discover a effect 10 years post vaccination in the current trial system.
+
+Some things make a difference such as time of day one is vaccinated - morning gives more immunity than afternoon for some reason.
+
+It is unclear what differentiates people that have been primed with aP vs. wP long term.
+
+CMI-PB project is an attempt to make data on this question open and examinable by all.
+
+# Exploring CMI-PB data
+
+The CMI-PB project collects data on aP and wP individuals and their immune response to infection and/or booster shots. 
+
+CMI-PB project provides scientific community with this info. It tracks and makes available the long-term humoral and cellular immune response data for a large number of individuals who received these vaccinations (DTwP or DTaP followed by Tdap boosters)
+
+
+CMI-PB data is in JSON format. To read these, we will use 'read.json()' function from the 'jsonlite' package.
+
+```{r}
+#Allows us to read, write and process JSON data
+
+library(jsonlite)
+```
+
+
+We pasted the url from the "subject" table on CMI-PB
+```{r}
+subject <- read_json("https://www.cmi-pb.org/api/subject", simplifyVector = TRUE)
+
+head(subject)
+```
+
+> Q4. How may aP and wP infancy vaccinated subjects are in the dataset?
+
+```{r}
+table(subject$infancy_vac)
+```
+
+> Q5. How many Male and Female subjects/patients are in the dataset?
+
+```{r}
+table(subject$biological_sex)
+```
+
+> Q6. What is the breakdown of race and biological sex (e.g. number of Asian females, White males etc…)?
+
+```{r}
+table(subject$race, subject$biological_sex)
+```
+
+
+## Side Note: Working with Dates
+```{r}
+library(lubridate)
+```
+
+What is today's date?
+
+```{r}
+today()
+```
+
+How many days have passed since the year 2000?
+
+```{r}
+today() - ymd("2000-01-01")
+```
+
+What is this in years?
+
+```{r}
+time_length( today() - ymd("2000-01-01"), "years")
+```
+
+
+
+```{r}
+age_days <- today() - ymd(subject$year_of_birth)
+
+age_years <- time_length(age_days, "years")
+
+age_years
+```
+
+```{r}
+subject$age <- age_years
+
+head(subject)
+```
+
+> Q7. Using this approach determine (i) the average age of wP individuals, (ii) the average age of aP individuals; and (iii) are they significantly different?
+
+
+```{r}
+library(dplyr)
+```
+```{r}
+mean(filter(subject, infancy_vac == "aP")$age)
+
+mean(filter(subject, infancy_vac == "wP")$age)
+```
+
+T- test
+
+```{r}
+ap.age <- filter(subject, infancy_vac == "aP")$age
+wp.age <- filter(subject, infancy_vac == "wP")$age
+
+t.test(ap.age, wp.age)
+```
+
+Based on T-test, these are significantly different populations in terms of age.
+
+> Q8. Determine the age of all individuals at time of boost?
+
+```{r}
+age_at_boost <- time_length( ymd(subject$date_of_boost) - ymd(subject$year_of_birth), "years")
+
+
+age_at_boost
+```
+
+
+> Q9. With the help of a faceted boxplot (see below), do you think these two groups are significantly different?
+
+```{r}
+ggplot(subject) +
+  aes(time_length(age, "year"),
+      fill=as.factor(infancy_vac)) +
+  geom_histogram(show.legend=FALSE) +
+  facet_wrap(vars(infancy_vac), nrow=2)
+```
+
+## Joining Multiple Tables
+
+Read the specimen and ab_titertables into R and store the data as 'specimen'and 'titer':
+
+```{r}
+specimen <- read_json("https://www.cmi-pb.org/api/specimen", simplifyVector = TRUE)
+
+titer <- read_json("https://www.cmi-pb.org/api/ab_titer", simplifyVector = TRUE)
+```
+
+```{r}
+head(specimen)
+```
+The subject_id column corresponds to the subject table information.
+
+```{r}
+head(titer)
+```
+
+> Q9. Complete the code to join specimen and subject tables to make a new merged data frame containing all specimen records along with their associated subject details:
+
+Note: 'inner_join()' merges two data sets, but only keeps observations in x that have a matching key in y (if a row is missing in either, it will be dropped). You may lose data with this method. 'full_join()' merges the datasets without dropping data. 
+
+```{r}
+dim(specimen)
+```
+
+
+```{r}
+meta <- inner_join(specimen, subject)
+
+dim(meta)
+
+head(meta)
+```
+
+> Q10. Now using the same procedure join meta with titer data so we can further analyze this data in terms of time of visit aP/wP, male/female etc.
+
+```{r}
+abdata <- inner_join(titer, meta)
+
+dim(abdata)
+
+head(abdata)
+```
+
+> Q11. How many specimens (i.e. entries in abdata) do we have for each isotype?
+
+```{r}
+table(abdata$isotype)
+```
+
+> Q12. What do you notice about the number of visit 8 specimens compared to other visits?
+
+```{r}
+table(abdata$visit)
+```
+
+There is a much lower sample size for visit 8 specimens in comparison to the other visits. Data is missing for many of the individuals and so it would be best to exclude visit 8.
+
+# Examine IgG1 Ab titer levels
+
+We want to examine abdata for IgG1 isotype. We use 'filter()' to isolate the IgG1 isotype and exlude the visit 8 entries.
+
+```{r}
+ig1 <- abdata %>%
+  filter(isotype == "IgG1", visit!=8)
+
+head(ig1)
+```
+
+> Q13. Complete the following code to make a summary boxplot of Ab titer levels for all antigens:
+
+```{r}
+ggplot(ig1) +
+  aes(MFI, antigen) +
+  geom_boxplot() +
+  facet_wrap(vars(visit), nrow = 2)
+```
+
+> Q14. What antigens show differences in the level of IgG1 antibody titers recognizing them over time? Why these and not others?
+
+FIM2/3, FHA and PT show differences.
+
+FIM 2/3 show a much higher difference in the level of IgG1 antibody titers recognizing them over time. Looking at Uniprot, we can see that fimbrial proteins are pili on the surface of pertussis. They are involved in cell adhesion. The vaccine is likely targeting these proteins (FIM2/3) on the cell and that is why we see increased levels of antibody titers recognizing them. 
+
+Now we can examine differences between wP and aP. 
+
+```{r}
+ggplot(ig1) +
+  aes(MFI, antigen, col = infancy_vac) +
+  geom_boxplot(show.legend = FALSE) +
+  facet_wrap(vars(visit), nrow = 2) +
+  theme_bw()
+```
+
+We see an increase in DT, (diptheria toxin) - the vaccine is targeting this - as well as FHA and FIM 2/3. 
+
+Again by faceting with infancy_vac:
+
+```{r}
+ggplot(ig1) +
+  aes(MFI, antigen, col = infancy_vac) +
+  geom_boxplot(show.legend = FALSE) +
+  facet_wrap(vars(infancy_vac, visit), nrow = 2)
+```
+
+> Q15. Filter to pull out only two specific antigens for analysis and create a boxplot for each. You can chose any you like. Below I picked a “control” antigen (“Measles”, that is not in our vaccines) and a clear antigen of interest (“FIM2/3”, extra-cellular fimbriae proteins from B. pertussis that participate in substrate attachment).
+
+```{r}
+filter(ig1, antigen == "Measles") %>%
+  ggplot() + 
+  aes(MFI, col = infancy_vac) +
+  geom_boxplot(show.legend = TRUE) + 
+  facet_wrap(vars(visit)) +
+  theme_bw()
+```
+
+For FIM 2/3:
+```{r}
+filter(ig1, antigen == "FIM2/3") %>%
+  ggplot() + 
+  aes(MFI, col = infancy_vac) +
+  geom_boxplot(show.legend = TRUE) + 
+  facet_wrap(vars(visit)) +
+  theme_bw()
+```
+
+> Q16. What do you notice about these two antigens time course and the FIM2/3 data in particular?
+
+Measles was the control, so there are consistent antibody levels after each visit. FIM 2/3 has an increase in antibody levels up to visit 6, and then decreases at visit 7.
+
+> Q17. Do you see any clear difference in aP vs. wP responses?
+
+While aP and wP responses stay around the same levels, wP has higher average levels of antibodies for the first 3 visits and then aP shows higher average levels of antibodies from visits 4 to 7. 
+
+# Obtaining CMI-PB RNASeq data
+
+```{r}
+url <- "https://www.cmi-pb.org/api/v2/rnaseq?versioned_ensembl_gene_id=eq.ENSG00000211896.7"
+
+rna <- read_json(url, simplifyVector = TRUE)
+```
+
+This link is for a key gene involved in expressing any IgG1 gene, in particular the IGHG1 gene. 
+
+
+Use '_join()' for RNA and meta (which is specimen and subject)
+
+```{r}
+ssrna <- inner_join(rna, meta)
+
+head(ssrna)
+
+```
+
+> Q18. Make a plot of the time course of gene expression for IGHG1 gene (i.e. a plot of visit vs. tpm).
+
+```{r}
+ggplot(ssrna) +
+  aes(visit, tpm, group = subject_id) +
+  geom_point() +
+  geom_line(alpha = 0.2)
+```
+
+> Q19.: What do you notice about the expression of this gene (i.e. when is it at it’s maximum level)?
+
+The maximum  level of the expression of the IGHG1 gene is at visit 4. Between visit 3 and 4, there is a rapid peak and between visit 4 and 5 there is a rapid decline.
+
+> Q20. Does this pattern in time match the trend of antibody titer data? If not, why not?
+
+No, the antibody titer data peaks around visit 6 and declines much more slowly. (peaks earler and declines slower)
+
+
+We can learn more by color/facet with infancy_vac status (the aP or wP they received as an infant)
+
+```{r}
+ggplot(ssrna) +
+  aes(tpm, col=infancy_vac) +
+  geom_boxplot() +
+  facet_wrap(vars(visit))
+```
+
+We can filter for visit 4:
+
+```{r}
+ssrna %>%  
+  filter(visit==4) %>% 
+  ggplot() +
+    aes(tpm, col=infancy_vac) + geom_density() + 
+    geom_rug()
+```
+
+Is RNA-Seq expression levels predictive of Ab titers?
+
+Yes, it appears so
+
+What differentiates aP vs. wP primed individuals?
+
+That is what we are trying to distinguish. Aside from the physical responses (the reason people switched from wP to aP), they appear to be different in the quickness, peak and decline of the immune response. 
+
+What about decades after their first immunization? Do you know? Contact Bjoern and Barry for your trip to Sweden :-)
+
+We cannot do clinical trials for that long (lack of funding), so it is unclear. That is why we are collecting this data. 
+
+
+
+```{r}
+sessionInfo()
+```
+
