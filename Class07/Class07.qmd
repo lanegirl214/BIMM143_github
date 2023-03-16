@@ -1,0 +1,275 @@
+---
+title: "Class 07: Machine Learning 1"
+author: "Tomi Lane Timmins"
+format: pdf
+---
+
+In this class, we will explore clustering and dimensionality reduction methods.
+
+## K-means
+
+(K is number of clusters - number of groups that you want. In k clustering, we provide k.)
+
+Make up some input data where we know what the answer should be.
+
+SIDENOTE:
+rnorm() - if you input 10, it will give you 10 points, all centered around 0. (only input is n and n = # observations we want)
+
+```{r}
+rnorm(10)
+```
+
+If we make a histogram of rnorm(),it gives a standard distribution
+```{r}
+hist(rnorm(10000))
+```
+
+You can change where it centers (one of the inputs is mean (default 0):
+```{r}
+rnorm(30, -3)
+```
+
+
+Back to making up data:
+```{r}
+tmp <- c( rnorm(30, -3), rnorm(30, 3) )
+# cbind binds together two columns:  the rev(dataset) (reverses the direction of the data provided (from 3 --> -3)) and the dataset (-3 -->3) 
+x <- cbind(x = tmp, y = rev(tmp))
+head(x)
+```
+
+Quick plot of x to see the code:
+
+```{r}
+plot(x)
+```
+
+The plot above can clearly be seen as two groups.
+
+Use the 'kmeans()' function setting k to 2 and nstart = 20. nstart specifies how many iterations.
+
+```{r}
+km <- kmeans(x, centers = 2, nstart = 20)
+
+km
+```
+
+>Q. How many points are in each cluster?
+
+  (check the help page to see which component will help you)
+  
+```{r}
+km$size
+```
+
+>What 'component' of your reulst object details:
+  - cluster assignment/membership
+  - cluster center
+  
+```{r}
+km$cluster
+```
+```{r}
+km$centers
+```
+
+> Q. Plot x colored by the kmeans cluster assignment and add cluster centers as blue points.
+
+You can color by 'col = "blue"' or can color by 'col = 1' because colors are numbered. 
+```{r}
+plot(x, col= c("red", "blue"))
+```
+This input alternates the color by each data point and is not what is desired.
+
+Instead, use the assignments of each variable to each cluster to code the color:
+
+```{r}
+plot(x, col = km$cluster)
+```
+Then add cluster centers as blue points: (pch and cex are not necessary, just make the points bigger)
+
+```{r}
+plot(x, col = km$cluster)
+
+points(km$centers, col = "blue", pch =15, cex=2)
+```
+
+
+Play with kmeans and ask for different number of clusters:
+
+R will provide you with the number of clusters you ask for, even if there are not that amount of clusters.
+
+```{r}
+km2 <- kmeans(x, centers = 4, nstart = 20)
+
+plot(x, col = km2$cluster)
+
+points(km2$centers, col = "blue", pch =15, cex=2)
+
+```
+
+
+
+# Hierarchical Clustering: 
+
+This is another very useful and widely employed clustering method which has the advantage over kmeans in that it can help reveal something of the true grouping in your data.
+
+The 'hclust()' function wants a distance matrix as input. We can get this from the 'dist()' function.
+
+```{r}
+d <- dist(x)
+hc <- hclust(d)
+hc
+```
+
+
+There is a plot method for hclust results.
+
+```{r}
+plot(hc)
+#abline() adds a solid line at specified height
+abline(h=10, col="red")
+```
+
+To get my cluster membership vector, I need to "cut" my tree to yield sub-trees or branches with all the members of a given cluster residing on the same cut branch. The function to do this is called 'cutree()' (note this is spelled with one t). 
+
+For cutree(), you can input the height you would like to cut the dendogram (h=10) or the number of clusters you would like (k=2). 
+
+It is often helpful to use the 'k=' argument rather than the 'h=' because it can be hard to distinguish the height you want for a specific number of clusters.
+
+```{r}
+# save grps to plot results
+grps <- cutree(hc, h =10)
+grps
+```
+
+```{r}
+plot(x, col = grps)
+```
+
+
+# Principal Component Analysis (PCA)
+
+Objective is to take complex datasets and make them easier to visualize and understand.
+
+The base R function for PCA is called 'prcomp()'.
+
+
+# PCA of UK Food
+
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+
+x <- read.csv(url)
+
+head(x)
+```
+
+> Q1. How many rows and columns are in your new data frame named x? What R functions could you use to answer this questions?
+
+```{r}
+nrow(x)
+
+ncol(x)
+```
+There are 17 rows and 5 columns in this dataset. (also could have used 'dim()' function)
+
+
+Preview the first 6 columns to check for issues with importing:
+```{r}
+head(x)
+```
+
+We were expecting 4 columns (one for each country), not 5! Now we have to change the rownames from classification as a column:
+```{r}
+rownames(x) <- x[,1]
+
+x <- x[,-1]
+
+head(x)
+```
+
+```{r}
+dim(x)
+```
+It is now fixed!There are only 4 columns now. (could also have written: 
+'x <- read.csv(url, row.names = 1)')
+
+> Q2. Which approach to solving the ‘row-names problem’ mentioned above do you prefer and why? Is one approach more robust than another under certain circumstances?
+
+I prefer the 'read.csv' solution as it requires less code and leaves less room for error. The first solution could remove more rows than intended. If used multiple times, we can lose data.
+
+```{r}
+barplot(as.matrix(x), beside = T, col = rainbow(nrow(x)))
+```
+
+> Q3: Changing what optional argument in the above barplot() function results in the following plot?
+
+We could change 'beside'. to 'FALSE' to get stacked bars instead of juxtaposed bars.
+
+```{r}
+barplot(as.matrix(x), beside = F, col = rainbow(nrow(x)))
+```
+
+> Q5: Generating all pairwise plots may help somewhat. Can you make sense of the following code and resulting figure? What does it mean if a given point lies on the diagonal for a given plot?
+
+```{r}
+pairs(x, col=rainbow(10), pch = 16)
+```
+The code above produces a matrix of scatterplots. 'col' and 'pch' are just cosmetic compenents. But the diagonal (which lists each of the countries) specifies the two countries being compared in each plot in the matrix.
+
+When a given point (type of food) lies on the diagonal, the two countries consume the same amount of that given food. 
+More variance from the diagonal means that the two countries consume different amounts of the types of food. One can see that Northern Ireland has more variance in their consumption than the other countries.
+
+> Q6. What is the main differences between N. Ireland and the other countries of the UK in terms of this data-set?
+
+Northern Ireland consumes more of the "dark blue" datapt, less of the "orange" datapt, and less of the "light blue" data pt. They consume more soft drinks, and less fresh fruit and alcohol. 
+
+Note: 't' is transverse of x (countries go from columns to rows)
+```{r}
+pca <- prcomp( t(x))
+summary(pca)
+```
+Note: 'proportion of variance' is variance captured with that particular PCA, 'cumulative proportion' is the variance captured with each PCA up to that point. For example, PCA1 and PCA2 capture 96% of the variation.
+
+A "PCA plot" (a.k.a. "Score Plot", PC1vsPC2 plot, etc)
+
+```{r}
+pca$x
+```
+
+> Q7. Complete the code below to generate a plot of PC1 vs PC2. The second line adds text labels over the data points.
+
+>Q8. Customize your plot so that the colors of the country names match the colors in our UK and Ireland map and table at start of this document.
+
+(answered Q7 + Q8 in same plot)
+
+```{r}
+plot(pca$x[,1], pca$x[,2], 
+     col = c( "orange", "red", "blue", "green"), pch = 15, xlab = "PC1", ylab = "PC2", xlim = c(-270,500))
+
+text(pca$x[,1], pca$x[,2], colnames(x))
+```
+
+From this plot, we can see that Ireland is farther from the other countries along the PC1 axis, which means there is more variance.
+
+Loadings plot for PC1:
+
+```{r}
+par(mar = c(10, 3, 0.35, 0))
+barplot( pca$rotation[,1], las =2 )
+```
+
+>Q9: Generate a similar ‘loadings plot’ for PC2. What two food groups feature prominantely and what does PC2 maninly tell us about?
+
+```{r}
+par(mar = c(10, 3, 0.35, 0))
+barplot( pca$rotation[,2], las =2 )
+```
+
+Soft drinks and fresh potatoes feature most prominently in the loadings plot for PC2. 
+
+
+
+
+
